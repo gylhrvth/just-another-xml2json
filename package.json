@@ -1,0 +1,38 @@
+{
+  "name": "just-another-xml2json",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist coverage",
+    "dev": "ts-node src/index.ts",
+    "build": "rollup -c",
+    "test": "jest --coverage",
+    "test:watch": "jest --watchAll",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "xml",
+    "json",
+    "xml2json",
+    "json2xml",
+    "xsd",
+    "schema"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.10.1",
+    "jest": "^30.2.0",
+    "rimraf": "^6.1.2",
+    "rollup": "^4.53.3",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

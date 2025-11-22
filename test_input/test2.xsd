@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- sample.xsd: simple order schema demonstrating elements, attributes, types, enumerations and constraints -->
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://example.com/order"
+    xmlns="http://example.com/order"
+    elementFormDefault="qualified">
+
+  <!-- Simple types -->
+  <xs:simpleType name="OrderNumberType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="ORD-\d{4}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="OrderStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Pending"/>
+      <xs:enumeration value="Processing"/>
+      <xs:enumeration value="Shipped"/>
+      <xs:enumeration value="Delivered"/>
+      <xs:enumeration value="Cancelled"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="EmailType">
+    <!-- Very simple email pattern for demonstration -->
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[^@\s]+@[^@\s]+\.[^@\s]+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PostalCodeType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\d{5}(-\d{4})?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Complex types -->
+  <xs:complexType name="CustomerType">
+    <xs:sequence>
+      <xs:element name="Name" type="xs:string"/>
+      <xs:element name="Email" type="EmailType"/>
+    </xs:sequence>
+    <xs:attribute name="customerId" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="AddressType">
+    <xs:sequence>
+      <xs:element name="Street" type="xs:string"/>
+      <xs:element name="City" type="xs:string"/>
+      <xs:element name="State" type="xs:string"/>
+      <xs:element name="PostalCode" type="PostalCodeType"/>
+      <xs:element name="Country" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ItemType">
+    <xs:sequence>
+      <xs:element name="ProductID" type="xs:string"/>
+      <xs:element name="ProductName" type="xs:string"/>
+      <xs:element name="Quantity" type="xs:positiveInteger"/>
+      <xs:element name="UnitPrice" type="xs:decimal"/>
+      <xs:element name="LineTotal" type="xs:decimal"/>
+    </xs:sequence>
+    <xs:attribute name="sku" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="ItemsType">
+    <xs:sequence>
+      <xs:element name="Item" type="ItemType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OrderType">
+    <xs:sequence>
+      <xs:element name="Customer" type="CustomerType"/>
+      <xs:element name="OrderDate" type="xs:date"/>
+      <xs:element name="Status" type="OrderStatusType"/>
+      <xs:element name="Items" type="ItemsType"/>
+      <xs:element name="ShippingAddress" type="AddressType" minOccurs="0"/>
+      <xs:element name="Notes" type="xs:string" minOccurs="0"/>
+      <xs:element name="Total" type="xs:decimal"/>
+    </xs:sequence>
+    <xs:attribute name="orderNumber" type="OrderNumberType" use="required"/>
+  </xs:complexType>
+
+  <!-- Root element -->
+  <xs:element name="Order" type="OrderType"/>
+
+</xs:schema>

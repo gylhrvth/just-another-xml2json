@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="catalog.xsd">
+    <metadata>
+        <generatedBy>gylhrvth</generatedBy>
+        <generatedAt>2025-11-21T21:37:57Z</generatedAt>
+        <description>Sample catalog with multiple items, attributes, CDATA and nested elements.</description>
+    </metadata>
+    <items>
+        <item id="item-001" category="books">
+            <title>Learning TypeScript</title>
+            <author>Jane Doe</author>
+            <price currency="USD">39.99</price>
+            <available>true</available>
+            <summary><![CDATA[This is a <sample> book & covers TypeScript basics.]]></summary>
+        </item>
+        <item id="item-002" category="electronics">
+            <title>USB-C Cable</title>
+            <manufacturer>Acme Corp</manufacturer>
+            <manufacturer>Acme Corp 2</manufacturer>
+            <manufacturer>Acme Corp 3</manufacturer>
+            <manufacturer>Acme Corp 4</manufacturer>
+            <price currency="USD">9.99</price>
+            <available>false</available>
+            <specs>
+                <length unit="cm">100</length>
+                <color>black</color>
+            </specs>
+        </item>
+        <item id="item-003" category="software">
+            <title>Awesome App</title>
+            <version>1.2.3</version>
+            <license>MIT</license>
+            <download url="https://example.com/downloads/awesome-app.zip" checksum="sha256:abcdef1234567890"/>
+        </item>
+    </items>
+</catalog>

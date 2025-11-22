@@ -1,0 +1,7 @@
+node_modules/
+
+coverage/
+dist/
+test_out/
+
+.env*
