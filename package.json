@@ -1,11 +1,11 @@
 {
   "name": "just-another-xml2json",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.ts",
   "scripts": {
     "clean": "rimraf dist coverage",
-    "dev": "ts-node src/index.ts",
+    "dev": "node --loader ts-node/esm src/index.ts",
     "build": "rollup -c",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",

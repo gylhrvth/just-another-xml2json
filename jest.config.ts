@@ -1,7 +1,7 @@
 import type { Config } from '@jest/types';
 
 const config: Config.InitialOptions = {
-  preset: 'ts-jest',
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   // Look for tests in __tests__ or files ending with .test.ts or .spec.ts
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
@@ -12,6 +12,19 @@ const config: Config.InitialOptions = {
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts'],
   // Verbose for clearer output in CI / local runs
   verbose: true,
+
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+      useESM: true
+    }
+  },
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }]
+  },
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: { '^(.*)\.js$': '$1' }
 };
 
 export default config;

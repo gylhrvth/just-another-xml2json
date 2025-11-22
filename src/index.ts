@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs'
-import { Lexer } from './lexer';
+import { Lexer } from './lexer.js';
 
 
 
