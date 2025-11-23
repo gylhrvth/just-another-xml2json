@@ -18,7 +18,7 @@ const [result, ignoredTokens] = convertXML2JSON(xmlFileContent)
 ````
 
 The variable "result" conains the parsed data:
-```json
+```
 {
   a: [
     { '@myAttr': '123' },
