@@ -1,7 +1,15 @@
 import { promises as fs } from 'fs'
-import { Lexer } from './lexer.js';
+import { Lexer, Token } from './lexer.js';
 
+export class WrongFormattedXmlError extends Error {
+  token?: Token
 
+  constructor(message?: string, token?: Token) {
+    super(message)
+    this.name = 'WrongFormattedXmlError'
+    this.token = token
+  }
+}
 
 
 export async function readFile(path: string) {
@@ -23,6 +31,7 @@ export function convertXML2JSON(xmlBuffer: string): any {
   let tagNameStack = []
   let attributes: {}[] = []
   let attrNameStack = []
+  const ignoredTokens: Token[] = []
   let proc_instr = ""
 
   for (let token of lex.tokens()) {
@@ -41,6 +50,12 @@ export function convertXML2JSON(xmlBuffer: string): any {
     } else if (token.type === 'GT') {
       const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0]
       const closingTag = (tagNameStack.length >= 2 && tagNameStack[1].type === 'SLASH')
+      if (!tagName ||
+        !Object.keys(tagName).includes('value')
+      ) {
+        throw new WrongFormattedXmlError('Missing tag name', tagName)
+      }
+
       if (!closingTag) {
         let newObject = {}
         Object.assign(newObject, { [tagName.value]: [...attributes] })
@@ -48,6 +63,7 @@ export function convertXML2JSON(xmlBuffer: string): any {
       } else {
         let childElements: any[] = []
         let index = tagStack.length - 1
+
         while (index > 0 && !Object.keys(tagStack[index]).includes(tagName.value)) {
           childElements = [tagStack[index], ...childElements]
           --index
@@ -56,6 +72,10 @@ export function convertXML2JSON(xmlBuffer: string): any {
         if (index >= 0) {
           const [[key, value]] = Object.entries(tagStack[index])
           if (key !== undefined) {
+            // validate matching opening-closing tag.
+            if (key !== tagName.value) {
+              throw new WrongFormattedXmlError(`Tag name of closing tag "${key}" doesn't match to "${tagName.value}"`, tagName)
+            }
             Object.assign(tagStack[index], { [key]: [...value as [], ...childElements] })
           }
         } else {
@@ -88,13 +108,17 @@ export function convertXML2JSON(xmlBuffer: string): any {
     } else if (token.type === 'PROC_INSTR') {
       proc_instr = token.value
     } else {
-      console.log('IGNORED Token: ', token)
+      // IGNORED token
+      ignoredTokens.push(token)
     }
   }
   if (proc_instr !== '') {
     Object.assign(tagStack[0], { '#PROC_INSTR': proc_instr })
   }
-  return tagStack[0]
+  if (tagStack.length != 1) {
+    throw new WrongFormattedXmlError('The root must have exactly ONE tag.')
+  }
+  return [tagStack[0], ignoredTokens]
 }
 
 
@@ -159,5 +183,4 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
   }
   return parts
 }
-
 

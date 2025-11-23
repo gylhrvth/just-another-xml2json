@@ -1,11 +1,11 @@
-import { convertXML2JSON, convertJSON2XML, readFile, writeFile } from './index'
+import { convertXML2JSON, convertJSON2XML, readFile, writeFile, WrongFormattedXmlError } from './index'
 import path from 'path';
 import * as fs from 'fs'
 
 describe('convert XML to JSON', () => {
     test('Minimum XML', () => {
         const input = '<a/>'
-        const result = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toStrictEqual({
             a: []
@@ -14,7 +14,7 @@ describe('convert XML to JSON', () => {
 
     test('XML decoration', () => {
         const input = '<?xml version="1.0"?>\n<a/>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([])
@@ -23,7 +23,7 @@ describe('convert XML to JSON', () => {
 
     test('XML attributes', () => {
         const input = '<?xml version="1.0"?>\n<a myAttr="123"/>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([{ "@myAttr": "123" }])
@@ -32,7 +32,7 @@ describe('convert XML to JSON', () => {
 
     test('XML no child notes', () => {
         const input = '<?xml version="1.0"?>\n<a></a>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([])
@@ -42,7 +42,7 @@ describe('convert XML to JSON', () => {
 
     test('XML with a single child note', () => {
         const input = '<?xml version="1.0"?>\n<a><b/></a>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([{ b: [] }])
@@ -52,7 +52,7 @@ describe('convert XML to JSON', () => {
 
     test('XML with 5 child notes', () => {
         const input = '<?xml version="1.0"?>\n<a><b/><b/><b/><b/><b/></a>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([
@@ -68,7 +68,7 @@ describe('convert XML to JSON', () => {
 
     test('XML with TEXT notes', () => {
         const input = '<?xml version="1.0"?>\n<a>Dummy text</a>'
-        const result: any = convertXML2JSON(input)
+        const [result] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([
@@ -79,11 +79,28 @@ describe('convert XML to JSON', () => {
 
     test('XML with comment', () => {
         const input = '<?xml version="1.0"?>\n<a><!-- This is a comment --></a>'
-        const result: any = convertXML2JSON(input)
+        const [result, ignoredTokens] = convertXML2JSON(input)
 
         expect(result).toHaveProperty('a')
         expect(result.a).toEqual([])
         expect(result).toHaveProperty('#PROC_INSTR')
+        expect(ignoredTokens.length).toEqual(1)
+    })
+
+
+    test('XML with CDATA', () => {
+        const input = '<?xml version="1.0"?>\n<a><description><![CDATA[\
+    This description contains characters that would normally need escaping:\
+    <, >, &, and quotes (").\
+    CDATA is useful for embedding text or code that should not be parsed as XML.\
+  ]]></description></a>'
+        const [result, ignoredTokens] = convertXML2JSON(input)
+
+        expect(result).toHaveProperty('a')
+        expect(result.a[0]).toHaveProperty('description')
+        expect((result.a[0].description[0]['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
+        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(ignoredTokens.length).toEqual(0)
     })
 
 })
@@ -204,7 +221,7 @@ describe('convert XML to JSON and back', () => {
         fs.rm(testOut, () => { })
 
         try {
-            const stat = await fs.promises.stat(testOut);
+            const _stat = await fs.promises.stat(testOut);
         } catch (err: any) {
             // If file doesn't exist, stat() throws with code 'ENOENT'
             expect(err && err.code).toBe('ENOENT');
@@ -232,6 +249,42 @@ describe('convert XML to JSON and back', () => {
 
     })
 
-
 })
 
+
+
+describe('Wrong formated XML documents', () => {
+    test('Missing opening <', () => {
+        const input = '<a>b/></a>'
+        const [result] = convertXML2JSON(input)
+
+        expect(result).toStrictEqual({
+            a: [
+                { '#TEXT': 'b/>' }
+            ]
+        })
+    })
+
+    test('Missing tag name', () => {
+        const input = '<a><>ABCD</b></a>'
+        expect(() => convertXML2JSON(input)).toThrow(WrongFormattedXmlError);
+    })
+
+    test('Missing tag name at the closing tag', () => {
+        const input = '<a><b>ABCD</></a>'
+        expect(() => convertXML2JSON(input)).toThrow(WrongFormattedXmlError);
+    })
+
+    test('Misplaced opening-cloging tags', () => {
+        const input = '<a><b>ABCD</a></b>'
+        expect(() => convertXML2JSON(input)).toThrow(WrongFormattedXmlError);
+    })
+
+
+    test('Two roots', () => {
+        const input = '<a></a><b>ABCD</b>'
+        expect(() => convertXML2JSON(input)).toThrow(WrongFormattedXmlError);
+    })
+
+
+})

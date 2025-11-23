@@ -1,4 +1,58 @@
+# Build output - KEEP your compiled output (dist/ or lib/) out of ignore if that's what you publish
+# If you publish compiled files in "dist/" do NOT include dist/ here.
+build/
+coverage/
+dist-test/   # some CI tools
+.out/
+*.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# TypeScript sources (exclude .ts but keep declaration files)
+src/
+**/*.ts
+!**/*.d.ts
+
+# Tests and examples
+tests/
+test/
+__tests__/
+*.spec.*
+*.test.*
+
+# Local dev and editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Tooling config and local env
+.DS_Store
+.env
+.env.local
+.env.*.local
+.nyc_output/
+.vscode/
+.cache/
+*.tgz
+
+# Lockfiles (optional - npm ignores package-lock by default on publish)
+package-lock.json
+# yarn.lock
+
+# GitHub/CI config (you usually don't want these in the package)
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Misc
+scripts/
+examples/
+docs/
+src-raw/
+
+# Keep important package files (these are always included by npm unless you explicitly exclude them):
+# package.json, README*, LICENSE*, CHANGELOG*, and files referenced by "main"/"module"/"types" are included automatically.
 test_input/
 test_output/
-coverage/
-node_modules/
