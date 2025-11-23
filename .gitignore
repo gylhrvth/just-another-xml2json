@@ -5,3 +5,5 @@ dist/
 test_output/
 
 .env*
+just-another-xml2json*.tgz
+

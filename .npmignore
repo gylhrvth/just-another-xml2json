@@ -1,0 +1,4 @@
+test_input/
+test_output/
+coverage/
+node_modules/
