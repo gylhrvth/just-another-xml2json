@@ -1,3 +1,22 @@
+export const TOKEN_TYPE_PROC_INSTR = "PROC_INSTR"
+export const TOKEN_TYPE_COMMENT = "COMMENT"
+export const TOKEN_TYPE_CDATA = "CDATA"
+export const TOKEN_TYPE_DOCTYPE = "DOCTYPE"
+export const TOKEN_TYPE_LT = "LT"
+export const TOKEN_TYPE_ENTITY = "ENTITY"
+export const TOKEN_TYPE_TEXT = "TEXT"
+export const TOKEN_TYPE_WHITESPACE = "WHITESPACE"
+export const TOKEN_TYPE_SLASH = "SLASH"
+export const TOKEN_TYPE_TAG_NAME = "TAG_NAME"
+export const TOKEN_TYPE_ATTR_NAME = "ATTR_NAME"
+export const TOKEN_TYPE_EQUAL = "EQUAL"
+export const TOKEN_TYPE_ATTR_VALUE_DQ = "ATTR_VALUE_DQ"
+export const TOKEN_TYPE_ATTR_VALUE_SQ = "ATTR_VALUE_SQ"
+export const TOKEN_TYPE_SLASH_GT = "SLASH_GT"
+export const TOKEN_TYPE_GT = "GT"
+export const TOKEN_TYPE_PUNCT = "PUNCT"
+
+
 export type TokenType = string;
 export interface Token {
     type: TokenType;
@@ -26,68 +45,59 @@ export class Lexer {
     // rules for the two states: DATA (outside tags) and TAG (inside <...>)
     private dataRules: Rule[] = [
         // processing instructions / XML declaration (<? ... ?>)
-        { type: "PROC_INSTR", regex: /^<\?[\s\S]*?\?>/ },
+        { type: TOKEN_TYPE_PROC_INSTR, regex: /^<\?[\s\S]*?\?>/ },
 
         // comments
-        { type: "COMMENT", regex: /^<!--[\s\S]*?-->/ },
+        { type: TOKEN_TYPE_COMMENT, regex: /^<!--[\s\S]*?-->/ },
 
         // CDATA sections
-        { type: "CDATA", regex: /^<!\[CDATA\[[\s\S]*?\]\]>/ },
+        { type: TOKEN_TYPE_CDATA, regex: /^<!\[CDATA\[[\s\S]*?\]\]>/ },
 
         // DOCTYPE (simple, not fully robust for nested bracketed subsets)
-        { type: "DOCTYPE", regex: /^<!DOCTYPE[\s\S]*?>/i },
+        { type: TOKEN_TYPE_DOCTYPE, regex: /^<!DOCTYPE[\s\S]*?>/i },
 
         // an opening angle bracket starts tag mode; consume '<' as token then switch
-        { type: "LT", regex: /^</ },
+        { type: TOKEN_TYPE_LT, regex: /^</ },
 
         // entity references (&name; or numeric)
-        { type: "ENTITY", regex: /^&#?\w+;?/ },
+        { type: TOKEN_TYPE_ENTITY, regex: /^&#?\w+;?/ },
 
         // text content until next '<' or '&' (note: preserves whitespace in text)
-        { type: "TEXT", regex: /^[^<&]+/ },
+        { type: TOKEN_TYPE_TEXT, regex: /^[^<&]+/ },
     ];
 
     private tagRules: Rule[] = [
         // inside tags whitespace separates attributes -> ignore
-        { type: "WHITESPACE", regex: /^\s+/, ignore: true },
+        { type: TOKEN_TYPE_WHITESPACE, regex: /^\s+/, ignore: true },
 
         // slash for closing tag or self-close marker (handled as own token)
-        { type: "SLASH", regex: /^\// },
+        { type: TOKEN_TYPE_SLASH, regex: /^\// },
 
         // tag name (first identifier you see in a tag)
-        { type: "TAG_NAME", regex: /^[A-Za-z_:][\w:.-]*/ },
+        { type: TOKEN_TYPE_TAG_NAME, regex: /^[A-Za-z_:][\w:.-]*/ },
 
         // attribute name
-        { type: "ATTR_NAME", regex: /^[A-Za-z_:][\w:.-]*/ },
+        { type: TOKEN_TYPE_ATTR_NAME, regex: /^[A-Za-z_:][\w:.-]*/ },
 
         // equal sign between attr name and value
-        { type: "EQUAL", regex: /^=/ },
+        { type: TOKEN_TYPE_EQUAL, regex: /^=/ },
 
         // attribute values: double-quoted or single-quoted (XML does not allow backslash escapes)
-        { type: "ATTR_VALUE_DQ", regex: /^"(?:[^"]*)"/ },
-        { type: "ATTR_VALUE_SQ", regex: /^'(?:[^']*)'/ },
+        { type: TOKEN_TYPE_ATTR_VALUE_DQ, regex: /^"(?:[^"]*)"/ },
+        { type: TOKEN_TYPE_ATTR_VALUE_SQ, regex: /^'(?:[^']*)'/ },
 
         // end of tag; match '/>' first for self-closing
-        { type: "SLASH_GT", regex: /^\/>/ },
-        { type: "GT", regex: /^>/ },
+        { type: TOKEN_TYPE_SLASH_GT, regex: /^\/>/ },
+        { type: TOKEN_TYPE_GT, regex: /^>/ },
 
         // fallback: any other single punctuator inside tag (rare for XML)
-        { type: "PUNCT", regex: /^[=]/ },
+        { type: TOKEN_TYPE_PUNCT, regex: /^[=]/ },
     ];
 
     constructor(input = "") {
         this.input = input;
     }
 
-    /*
-        setInput(input: string) {
-            this.input = input;
-            this.pos = 0;
-            this.line = 1;
-            this.col = 1;
-            this.state = "DATA";
-        }
-    */
     // primary method: returns next token or null at EOF
     nextToken(): Token | null {
         const src = this.input;
@@ -156,25 +166,4 @@ export class Lexer {
             yield t;
         }
     }
-
-    /*
-        tokenizeAll(): Token[] {
-            const out: Token[] = [];
-            for (const t of this.tokens()) out.push(t);
-            return out;
-        }
-    
-        // peek (cheap clone) -- clones just the lexical state
-        peek(): Token | null {
-            const save = { pos: this.pos, line: this.line, col: this.col, state: this.state };
-            try {
-                return this.nextToken();
-            } finally {
-                this.pos = save.pos;
-                this.line = save.line;
-                this.col = save.col;
-                this.state = save.state;
-            }
-        }
-    */
 }

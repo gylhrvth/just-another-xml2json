@@ -1,5 +1,20 @@
 import { promises as fs } from 'fs'
-import { Lexer, Token } from './lexer.js';
+import {
+  Lexer,
+  Token,
+  TOKEN_TYPE_ATTR_VALUE_DQ,
+  TOKEN_TYPE_ATTR_VALUE_SQ,
+  TOKEN_TYPE_CDATA,
+  TOKEN_TYPE_EQUAL,
+  TOKEN_TYPE_GT,
+  TOKEN_TYPE_LT,
+  TOKEN_TYPE_PROC_INSTR,
+  TOKEN_TYPE_SLASH,
+  TOKEN_TYPE_TAG_NAME,
+  TOKEN_TYPE_TEXT
+} from './lexer.js';
+import { deprecate } from 'util';
+
 
 export class WrongFormattedXmlError extends Error {
   token?: Token
@@ -35,11 +50,11 @@ export function convertXML2JSON(xmlBuffer: string): any {
   let proc_instr = ""
 
   for (let token of lex.tokens()) {
-    if (token.type === 'LT' ||
-      token.type === 'SLASH'
+    if (token.type === TOKEN_TYPE_LT ||
+      token.type === TOKEN_TYPE_SLASH
     ) {
       tagNameStack.push(token)
-    } else if (token.type === 'TAG_NAME') {
+    } else if (token.type === TOKEN_TYPE_TAG_NAME) {
       if (tagNameStack.length == 0 || tagNameStack[tagNameStack.length - 1].type !== 'TAG_NAME') {
         // Add tag
         tagNameStack.push(token)
@@ -47,7 +62,7 @@ export function convertXML2JSON(xmlBuffer: string): any {
         // Add attribute
         attrNameStack.push(token)
       }
-    } else if (token.type === 'GT') {
+    } else if (token.type === TOKEN_TYPE_GT) {
       const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0]
       const closingTag = (tagNameStack.length >= 2 && tagNameStack[1].type === 'SLASH')
       if (!tagName ||
@@ -84,9 +99,11 @@ export function convertXML2JSON(xmlBuffer: string): any {
       }
       tagNameStack = []
       attributes = []
-    } else if (token.type === 'EQUAL') {
+    } else if (token.type === TOKEN_TYPE_EQUAL) {
       attrNameStack.push(token)
-    } else if (token.type === 'ATTR_VALUE_DQ') {
+    } else if (token.type === TOKEN_TYPE_ATTR_VALUE_DQ ||
+      token.type === TOKEN_TYPE_ATTR_VALUE_SQ
+    ) {
       const attrName = attrNameStack[0].value
       // drop string quotes
       const attrValue = token.value.slice(1, token.value.length - 1)
@@ -95,17 +112,16 @@ export function convertXML2JSON(xmlBuffer: string): any {
         { [`@${attrName}`]: attrValue }
       ]
       attrNameStack = []
-    } else if (token.type === 'TEXT' ||
-      token.type === 'CDATA'
+    } else if (token.type === TOKEN_TYPE_TEXT ||
+      token.type === TOKEN_TYPE_CDATA
     ) {
       const textValue = token.value.trim()
       if (textValue.length != 0) {
         let newObject = {}
-        const key = '#TEXT'
-        Object.assign(newObject, { [key]: textValue })
+        Object.assign(newObject, { ['#TEXT']: textValue })
         tagStack.push(newObject)
       }
-    } else if (token.type === 'PROC_INSTR') {
+    } else if (token.type === TOKEN_TYPE_PROC_INSTR) {
       proc_instr = token.value
     } else {
       // IGNORED token
