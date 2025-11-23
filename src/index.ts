@@ -27,12 +27,12 @@ export class WrongFormattedXmlError extends Error {
 }
 
 
-export async function readFile(path: string) {
+export async function readXMLFile(path: string) {
   const buffer = await fs.readFile(path);
   return convertXML2JSON(buffer.toString())
 }
 
-export async function writeFile(path: string, obj: any) {
+export async function writeXMLFile(path: string, obj: any) {
   const buffer = convertJSON2XML(obj)
   const buf = Buffer.from(buffer, 'utf8');
   await fs.writeFile(path, buf)

@@ -1,4 +1,4 @@
-import { convertXML2JSON, convertJSON2XML, readFile, writeFile, WrongFormattedXmlError } from './index'
+import { convertXML2JSON, convertJSON2XML, readXMLFile, writeXMLFile, WrongFormattedXmlError } from './index'
 import path from 'path';
 import * as fs from 'fs'
 
@@ -196,8 +196,8 @@ describe('convert XML to JSON and back', () => {
             expect(err && err.code).toBe('ENOENT');
         }
 
-        const result = await readFile(testData)
-        await writeFile(testOut, result)
+        const [result] = await readXMLFile(testData)
+        await writeXMLFile(testOut, result)
 
         try {
             const stat = await fs.promises.stat(testOut);
@@ -228,9 +228,9 @@ describe('convert XML to JSON and back', () => {
         }
 
         const startTime = performance.now();
-        const result = await readFile(testData)
+        const [result] = await readXMLFile(testData)
         const midTime = performance.now();
-        await writeFile(testOut, result)
+        await writeXMLFile(testOut, result)
         const endTime = performance.now();
 
         const durationOfRead = midTime - startTime

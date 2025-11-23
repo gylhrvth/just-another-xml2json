@@ -62,6 +62,16 @@ The variable result contains the XML representation of the input data:
 </a>
 ```
 
+### Working with files directly
+```ts
+  const testDataPath = '/home/userX/...'  // location of input XML
+  const testOutPath = '/home/userX/...'   // location of result XML
+
+  const [result] = await readXMLFile(testDataPath)
+  await writeXMLFile(testOutPath, result)
+```
+
+
 ## Licensing
 MIT License
 
