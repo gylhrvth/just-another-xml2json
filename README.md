@@ -19,21 +19,29 @@ const [result, ignoredTokens] = convertXML2JSON(xmlFileContent)
 
 The variable "result" conains the parsed data:
 ```
+[
+{
+  '#PROC_INSTR': '<?xml version="1.0"?>'
+},
 {
   a: [
     { '@myAttr': '123' },
     { b: [ { '@bAttr': 'Hello' } ] },
     { b: [ { '@bAttr': 'World!' }, { '#TEXT': '1234' } ] }
   ],
-  '#PROC_INSTR': '<?xml version="1.0"?>'
 }
+]
 ```
 
-The variable "ignoredTokens" contains the ignored tokens (e.g. comments)
+The variable "ignoredTokens" contains the ignored tokens
 
 ## Usage JSON --> XML
 ```ts
-const myObject = {
+const myObject = [
+  {
+    '#PROC_INSTR': '<?xml version="1.0"?>'
+  },
+  {
   a: [
     { '@myAttr': '123' },
     {
@@ -48,8 +56,7 @@ const myObject = {
       ]
     },
   ],
-  '#PROC_INSTR': '<?xml version="1.0"?>'
-}
+}]
 const result: string = convertJSON2XML(myObject)
 ```
 
