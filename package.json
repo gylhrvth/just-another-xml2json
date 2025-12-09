@@ -1,7 +1,8 @@
 {
   "name": "just-another-xml2json",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
+  "type": "module",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -17,7 +18,7 @@
     "build": "rollup -c",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",
-    "prepare": "npm run build"
+    "prepack": "npm run build"
   },
   "keywords": [
     "xml",
@@ -35,6 +36,7 @@
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
+    "dependency-cruiser": "^17.3.2",
     "jest": "^30.2.0",
     "rimraf": "^6.1.2",
     "rollup": "^4.53.3",

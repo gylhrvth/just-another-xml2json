@@ -5,6 +5,7 @@ import {
   TOKEN_TYPE_ATTR_VALUE_DQ,
   TOKEN_TYPE_ATTR_VALUE_SQ,
   TOKEN_TYPE_CDATA,
+  TOKEN_TYPE_COMMENT,
   TOKEN_TYPE_EQUAL,
   TOKEN_TYPE_GT,
   TOKEN_TYPE_LT,
@@ -39,7 +40,7 @@ export async function writeXMLFile(path: string, obj: any) {
 }
 
 
-export function convertXML2JSON(xmlBuffer: string): any {
+export function convertXML2JSON(xmlBuffer: string): any[] {
   const lex = new Lexer(xmlBuffer)
 
   let tagStack = []
@@ -47,7 +48,6 @@ export function convertXML2JSON(xmlBuffer: string): any {
   let attributes: {}[] = []
   let attrNameStack = []
   const ignoredTokens: Token[] = []
-  let proc_instr = ""
 
   for (let token of lex.tokens()) {
     if (token.type === TOKEN_TYPE_LT ||
@@ -121,32 +121,41 @@ export function convertXML2JSON(xmlBuffer: string): any {
         Object.assign(newObject, { ['#TEXT']: textValue })
         tagStack.push(newObject)
       }
+    } else if (token.type === TOKEN_TYPE_COMMENT) {
+      let newObject = {}
+      Object.assign(newObject, { ['#COMMENT']: token.value })
+      tagStack.push(newObject)
     } else if (token.type === TOKEN_TYPE_PROC_INSTR) {
-      proc_instr = token.value
+      let newObject = {}
+      Object.assign(newObject, { ['#PROC_INSTR']: token.value })
+      tagStack.push(newObject)
     } else {
       // IGNORED token
       ignoredTokens.push(token)
     }
   }
-  if (proc_instr !== '') {
-    Object.assign(tagStack[0], { '#PROC_INSTR': proc_instr })
-  }
-  if (tagStack.length != 1) {
+
+  if (tagStack.filter(t =>
+    !Object.keys(t).includes('#COMMENT') &&
+    !Object.keys(t).includes('#PROC_INSTR')
+  ).length != 1) {
     throw new WrongFormattedXmlError('The root must have exactly ONE tag.')
   }
-  return [tagStack[0], ignoredTokens]
+  return [tagStack, ignoredTokens]
 }
 
 
-export function convertJSON2XML(obj: any) {
+export function convertJSON2XML(obj: any[]) {
   const parts: string[] = []
-  if (Object.keys(obj).includes('#PROC_INSTR')) {
-    parts.push(`${obj['#PROC_INSTR']}\n`)
-  }
 
-  Object.keys(obj).forEach(tag => {
-    createTag(tag, obj[tag]).forEach(p => parts.push(p))
+  obj.forEach(o => {
+    console.log('Top-level object:', o)
+
+    Object.keys(o).forEach(tag => {
+      createTag(tag, o[tag]).forEach(p => parts.push(p))
+    })
   })
+
 
   const result = parts.join('')
   return result;
@@ -161,14 +170,19 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
   const texts: string[] = []
 
   if (tagName === '#PROC_INSTR') {
-    return parts;
-  }
-  if (Array.isArray(value)) {
+    parts.push(`${value}\n`)
+    return parts
+  } else if (tagName === '#COMMENT') {
+    parts.push(`${value}\n`)
+    return parts
+  } else if (Array.isArray(value)) {
     value.forEach((element: any) => {
       const keys = Object.keys(element)
       if (keys.length == 1) {
         const key = keys[0]
-        if (key === '#TEXT') {
+        if (key === '#COMMENT') {
+          children.push(`    ${element[key]}\n`)
+        } else if (key === '#TEXT') {
           texts.push(element[key])
         } else if (key.startsWith('@')) {
           const attributeName = key.slice(1)

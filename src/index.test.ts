@@ -7,36 +7,39 @@ describe('convert XML to JSON', () => {
         const input = '<a/>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toStrictEqual({
+        expect(result).toStrictEqual([{
             a: []
-        })
+        }])
     })
 
     test('XML decoration', () => {
         const input = '<?xml version="1.0"?>\n<a/>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([])
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML attributes', () => {
         const input = '<?xml version="1.0"?>\n<a myAttr="123"/>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([{ "@myAttr": "123" }])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([{ "@myAttr": "123" }])
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML no child notes', () => {
         const input = '<?xml version="1.0"?>\n<a></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([])
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -44,9 +47,10 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a><b/></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([{ b: [] }])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([{ b: [] }])
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -54,15 +58,16 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a><b/><b/><b/><b/><b/></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([
             { b: [] },
             { b: [] },
             { b: [] },
             { b: [] },
             { b: [] },
         ])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -70,21 +75,24 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a>Dummy text</a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a).toEqual([
             { '#TEXT': 'Dummy text' },
         ])
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML with comment', () => {
         const input = '<?xml version="1.0"?>\n<a><!-- This is a comment --></a>'
         const [result, ignoredTokens] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a).toEqual([])
-        expect(result).toHaveProperty('#PROC_INSTR')
-        expect(ignoredTokens.length).toEqual(1)
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a.length).toBe(1);
+        expect(result[1].a[0]).toHaveProperty('#COMMENT')
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(ignoredTokens.length).toEqual(0)
     })
 
 
@@ -96,10 +104,12 @@ describe('convert XML to JSON', () => {
   ]]></description></a>'
         const [result, ignoredTokens] = convertXML2JSON(input)
 
-        expect(result).toHaveProperty('a')
-        expect(result.a[0]).toHaveProperty('description')
-        expect((result.a[0].description[0]['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
-        expect(result).toHaveProperty('#PROC_INSTR')
+        expect(result.length).toBe(2)
+        expect(result[1]).toHaveProperty('a')
+        expect(result[1].a.length).toBe(1)
+        expect(result[1].a[0]).toHaveProperty('description')
+        expect((result[1].a[0].description[0]['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
+        expect(result[0]).toHaveProperty('#PROC_INSTR')
         expect(ignoredTokens.length).toEqual(0)
     })
 
@@ -109,9 +119,9 @@ describe('convert XML to JSON', () => {
 
 describe('convert JSON to XML', () => {
     test('Minimum JSON', () => {
-        const input = {
+        const input = [{
             a: []
-        }
+        }]
         const result = convertJSON2XML(input)
 
         expect(result).toContain('<a/>')
@@ -119,10 +129,10 @@ describe('convert JSON to XML', () => {
 
 
     test('XML decoration', () => {
-        const input = {
+        const input = [{
             a: [],
             '#PROC_INSTR': '<?xml version="1.0"?>'
-        }
+        }]
         const result: any = convertJSON2XML(input)
 
         expect(result).toContain('<?xml version="1.0"?>')
@@ -131,12 +141,14 @@ describe('convert JSON to XML', () => {
 
 
     test('JSON with attributes', () => {
-        const input = {
-            a: [
-                { '@myAttr': '123' }
-            ],
-            '#PROC_INSTR': '<?xml version="1.0"?>'
-        }
+        const input = [
+            {
+                '#PROC_INSTR': '<?xml version="1.0"?>'
+            }, {
+                a: [
+                    { '@myAttr': '123' }
+                ],
+            }]
         const result: any = convertJSON2XML(input)
 
         expect(result).toContain('<?xml version="1.0"?>')
@@ -144,13 +156,16 @@ describe('convert JSON to XML', () => {
     })
 
     test('JSON with TEXT node', () => {
-        const input = {
-            a: [
-                { '@myAttr': '123' },
-                { '#TEXT': 'abcd' }
-            ],
-            '#PROC_INSTR': '<?xml version="1.0"?>'
-        }
+        const input = [
+            {
+                '#PROC_INSTR': '<?xml version="1.0"?>'
+            },
+            {
+                a: [
+                    { '@myAttr': '123' },
+                    { '#TEXT': 'abcd' }
+                ],
+            }]
         const result: any = convertJSON2XML(input)
 
         expect(result).toContain('<?xml version="1.0"?>')
@@ -158,14 +173,38 @@ describe('convert JSON to XML', () => {
     })
 
 
+    test('JSON with comment elements', () => {
+        const input = [
+            {
+                '#PROC_INSTR': '<?xml version="1.0"?>'
+            },
+            {
+                '#COMMENT': '<!-- This is a comment -->'
+            },
+            {
+                a: [
+                    { '@myAttr': '123' },
+                    { 'b': [] }
+                ]
+            },
+        ]
+        const result: any = convertJSON2XML(input)
+
+        expect(result).toContain('<?xml version="1.0"?>')
+        expect(result).toContain('<!-- This is a comment -->')
+        expect(result).toContain('<a myAttr="123">')
+        expect(result).toContain('<b/>')
+        expect(result).toContain('</a>')
+    })
+
     test('JSON with child elements', () => {
-        const input = {
+        const input = [{
             a: [
                 { '@myAttr': '123' },
                 { 'b': [] }
             ],
             '#PROC_INSTR': '<?xml version="1.0"?>'
-        }
+        }]
         const result: any = convertJSON2XML(input)
 
         expect(result).toContain('<?xml version="1.0"?>')
@@ -173,15 +212,13 @@ describe('convert JSON to XML', () => {
         expect(result).toContain('<b/>')
         expect(result).toContain('</a>')
     })
-
-
 })
 
 
 describe('convert XML to JSON and back', () => {
-    test('stress test with an XSD', async () => {
+    test('test with XML comments', async () => {
 
-        const testFileName = 'test2.xsd'
+        const testFileName = 'test3.xml'
         const testData = path.join(__dirname, '..', 'test_input', testFileName)
         const outDir = path.join(__dirname, '..', 'test_output')
         const testOut = path.join(outDir, testFileName)
@@ -208,6 +245,36 @@ describe('convert XML to JSON and back', () => {
 
 
     })
+
+
+    test('stress test with an XSD', async () => {
+
+        const testFileName = 'test2.xsd'
+        const testData = path.join(__dirname, '..', 'test_input', testFileName)
+        const outDir = path.join(__dirname, '..', 'test_output')
+        const testOut = path.join(outDir, testFileName)
+
+        fs.mkdir(outDir, { recursive: true }, () => { })
+        fs.rm(testOut, () => { })
+
+        try {
+            const stat = await fs.promises.stat(testOut);
+        } catch (err: any) {
+            // If file doesn't exist, stat() throws with code 'ENOENT'
+            expect(err && err.code).toBe('ENOENT');
+        }
+
+        const [result] = await readXMLFile(testData)
+        await writeXMLFile(testOut, result)
+
+        try {
+            const stat = await fs.promises.stat(testOut);
+            expect(stat.size).toBeGreaterThan(0)
+        } catch (err: any) {
+            // If file doesn't exist, stat() throws with code 'ENOENT'
+        }
+    })
+
 
 
     test('stress test with a large file', async () => {
@@ -258,11 +325,11 @@ describe('Wrong formated XML documents', () => {
         const input = '<a>b/></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result).toStrictEqual({
+        expect(result).toStrictEqual([{
             a: [
                 { '#TEXT': 'b/>' }
             ]
-        })
+        }])
     })
 
     test('Missing tag name', () => {

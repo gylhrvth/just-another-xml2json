@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- Sample XML file -->
+<note>
+    <to>Tove</to>
+    <from>Jani</from>
+    <!-- This is a comment -->
+    <heading reminder="yes">
+        <!-- 
+        Reminder 
+        heading 
+        -->
+        <title>Reminder</title>
+    </heading>
+    <body>Don't forget me this weekend!</body>
+</note>
+<!-- End of XML file -->
