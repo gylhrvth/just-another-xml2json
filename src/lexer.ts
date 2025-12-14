@@ -70,9 +70,6 @@ export class Lexer {
         // inside tags whitespace separates attributes -> ignore
         { type: TOKEN_TYPE_WHITESPACE, regex: /^\s+/, ignore: true },
 
-        // slash for closing tag or self-close marker (handled as own token)
-        { type: TOKEN_TYPE_SLASH, regex: /^\// },
-
         // tag name (first identifier you see in a tag)
         { type: TOKEN_TYPE_TAG_NAME, regex: /^[A-Za-z_:][\w:.-]*/ },
 
@@ -88,6 +85,10 @@ export class Lexer {
 
         // end of tag; match '/>' first for self-closing
         { type: TOKEN_TYPE_SLASH_GT, regex: /^\/>/ },
+
+        // slash for closing tag (handled as own token)
+        { type: TOKEN_TYPE_SLASH, regex: /^\// },
+
         { type: TOKEN_TYPE_GT, regex: /^>/ },
 
         // fallback: any other single punctuator inside tag (rare for XML)
