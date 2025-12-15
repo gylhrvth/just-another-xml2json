@@ -17,10 +17,9 @@ import {
 } from './lexer.js';
 
 
-type ConvertXML2JSONOptions = {
-  dropArrayIfThereOnlyASingleChild?: boolean
+export type ConvertXML2JSONOptions = {
+  dropArrayIfKeysAreUnique?: boolean
 }
-
 
 export class WrongFormattedXmlError extends Error {
   token?: Token
@@ -33,19 +32,19 @@ export class WrongFormattedXmlError extends Error {
 }
 
 
-export async function readXMLFile(path: string, options: ConvertXML2JSONOptions = {}) {
+export async function readXMLFile(path: string, options: ConvertXML2JSONOptions = {}): Promise<[result: (any | any[]), ignoredTokens: Token[]]> {
   const buffer = await fs.readFile(path);
   return convertXML2JSON(buffer.toString(), options)
 }
 
-export async function writeXMLFile(path: string, obj: any) {
+export async function writeXMLFile(path: string, obj: any): Promise<void> {
   const buffer = convertJSON2XML(obj)
   const buf = Buffer.from(buffer, 'utf8');
   await fs.writeFile(path, buf)
 }
 
 
-export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptions = {}): any[] {
+export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptions = {}): [result: (any | any[]), ignoredTokens: Token[]] {
   const lex = new Lexer(xmlBuffer)
 
   let tagStack: (object | object[])[] = []
@@ -78,7 +77,7 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
 
       tagStack.push({ [tagName.value]: [] })
       const [[key, value]] = Object.entries(tagStack[tagStack.length - 1])
-      mergeResult(tagStack[tagStack.length - 1], key, value, childElements, options)
+      mergeAsObjectOrArray(tagStack[tagStack.length - 1], key, value, childElements, options)
 
       tagNameStack = []
       attributes = []
@@ -109,14 +108,14 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
           if (key !== undefined) {
             // validate matching opening-closing tag.
             if (key !== tagName.value) {
-              throw new WrongFormattedXmlError(`Tag name of closing tag "${key}" doesn't match to "${tagName.value}"`, tagName)
+              throw new WrongFormattedXmlError(`Tag name of closing tag "${tagName.value}" at ${token.line}:${token.col} doesn't match to any opening tag.`)
             }
             for (let i = value.length - 1; i >= 0; --i) {
               const attrObj = value[i]
               childElements = [attrObj, ...childElements]
             }
             Object.assign(tagStack[index], { [key]: {} })
-            mergeResult(tagStack[index], key, value, childElements, options)
+            mergeAsObjectOrArray(tagStack[index], key, value, childElements, options)
           }
         } else {
           console.error('Stack error')
@@ -160,20 +159,40 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
     }
   }
 
-  if (tagStack.filter(t =>
+
+  const rootTags = tagStack.filter(t =>
     !Object.keys(t).includes('#COMMENT') &&
     !Object.keys(t).includes('#PROC_INSTR')
-  ).length != 1) {
-    throw new WrongFormattedXmlError('The root must have exactly ONE tag.')
+  ).map((t: any) => {
+    const key = Object.keys(t)[0]
+    if (key === "#TEXT") {
+      return t[key]
+    }
+    return key
+  })
+
+  if (rootTags.length != 1) {
+    throw new WrongFormattedXmlError(`The root must have exactly ONE tag. Check for "${rootTags.join(', ')}" tags.`)
+  }
+  if (options.dropArrayIfKeysAreUnique === true && isEveryKeyUnique(tagStack)) {
+    let resultObject: object = {} as object
+    tagStack.forEach((t: any) => {
+      const key = Object.keys(t)[0]
+      Object.assign(resultObject, { [key]: t[key] })
+    })
+    return [resultObject, ignoredTokens]
   }
   return [tagStack, ignoredTokens]
 }
 
 
-export function convertJSON2XML(obj: any[]) {
+export function convertJSON2XML(obj: any | any[]): string {
   const parts: string[] = []
 
-  obj.forEach(o => {
+  if (!Array.isArray(obj)) {
+    obj = [obj]
+  }
+  obj.forEach((o: any) => {
     Object.keys(o).forEach(tag => {
       createTag(tag, o[tag]).forEach(p => parts.push(p))
     })
@@ -200,25 +219,20 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
     return parts
   } else if (Array.isArray(value)) {
     value.forEach((element: any) => {
+      // Process values as array 
       const keys = Object.keys(element)
       if (keys.length == 1) {
         const key = keys[0]
-        if (key === '#COMMENT') {
-          children.push(`    ${element[key]}\n`)
-        } else if (key === '#TEXT') {
-          texts.push(element[key])
-        } else if (key.startsWith('@')) {
-          const attributeName = key.slice(1)
-          attributes.push(` ${attributeName}="${element[key].toString()}"`)
-        } else {
-          createTag(key, element[key], indent + 1).forEach(c => children.push(c))
-        }
+        processChildElements(key, element, indent, attributes, children, texts)
       } else {
         console.error('Invalid Keys', element)
       }
     })
   } else {
-    console.error('Invalid tag', value)
+    // Process object attributes as children...
+    Object.keys(value).forEach(key => {
+      processChildElements(key, value, indent, attributes, children, texts)
+    })
   }
 
   if (children.length == 0) {
@@ -238,17 +252,25 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
 }
 
 
+function processChildElements(key: string, element: any, indent: number, attributes: string[], children: string[], texts: string[]) {
+  if (key === '#COMMENT') {
+    children.push(`    ${element[key]}\n`)
+  } else if (key === '#TEXT') {
+    texts.push(element[key])
+  } else if (key.startsWith('@')) {
+    const attributeName = key.slice(1)
+    attributes.push(` ${attributeName}="${element[key].toString()}"`)
+  } else {
+    createTag(key, element[key], indent + 1).forEach(c => children.push(c))
+  }
+}
 
-function mergeResult(tagStackTopObject: object | object[], key: string, value: object, childElements: object[], options: ConvertXML2JSONOptions) {
-  if (options.dropArrayIfThereOnlyASingleChild !== true) {
+
+function mergeAsObjectOrArray(tagStackTopObject: object | object[], key: string, value: object, childElements: object[], options: ConvertXML2JSONOptions) {
+  if (options.dropArrayIfKeysAreUnique !== true) {
     Object.assign(tagStackTopObject, { [key]: [...childElements] })
   } else {
-    const countDuplicates: Map<string, number> = childElements.reduce((result: Map<string, number>, ce) => {
-      const key = Object.keys(ce)[0]
-      result.set(key, (result.get(key) || 0) + 1)
-      return result
-    }, new Map<string, number>())
-    if (Object.entries(countDuplicates).every(kv => kv[1] == 1)) {
+    if (isEveryKeyUnique(childElements)) {
       let compactChildElements = {}
       childElements.forEach((ce: any) => {
         const ceKey = Object.keys(ce)[0]
@@ -262,32 +284,24 @@ function mergeResult(tagStackTopObject: object | object[], key: string, value: o
 }
 
 
+function isEveryKeyUnique(objArray: object[]): boolean {
+  const countDuplicates: Map<string, number> = objArray.reduce((result: Map<string, number>, ce) => {
+    const key = Object.keys(ce)[0]
+    result.set(key, (result.get(key) || 0) + 1)
+    return result
+  }, new Map<string, number>())
+
+  return Array.from(countDuplicates.entries()).every(kv => kv[1] === 1);
+}
 
 
 
-const xml: string = `
-<?xml version="1.0"?>
-<note>
-    <to attr1="value1" attr2='value2'>Tove</to>
-    <from>Jani</from>
-    <heading>Reminder</heading>
-    <body style="font-weight: bold;">
-    <p>Don't forget me this weekend!</p>
-    <p>Second paragraph.</p>
-    <p>Third paragraph.</p>
-    </body>
-    <emptyTag/>
-    <emptyTag2></emptyTag2>
-    <emptyTagWithAttrs attr="value"/>
-    <emptyTagWith2Attrs attr="value" myOtherAttr="value2"/>
-    <!-- This is a comment -->
-</note>
-`;
+const xmlFileContent = `<note>
+  <to>Tove</to>
+  <from>Jani</from>
+  <heading>Reminder</heading>
+  <body>Don't forget me this weekend!</body>
+</note>`;
 
-
-
-const [result] = convertXML2JSON(xml, { dropArrayIfThereOnlyASingleChild: true });
-console.log('XML to JSON result:', JSON.stringify(result, null, 6));
-
-const [result2] = convertXML2JSON(xml);
-console.log('XML to JSON result:', JSON.stringify(result2, null, 6));
+const [obj] = convertXML2JSON(xmlFileContent, { dropArrayIfKeysAreUnique: true })
+console.log(JSON.stringify(obj, null, 6))

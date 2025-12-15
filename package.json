@@ -1,15 +1,15 @@
 {
   "name": "just-another-xml2json",
-  "version": "0.2.0",
-  "description": "",
+  "version": "0.3.0",
+  "description": "Just an another XML to JSON (and back) converter",
   "type": "module",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs.js"
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
@@ -28,7 +28,7 @@
     "xsd",
     "schema"
   ],
-  "author": "",
+  "author": "Gyula Horvath <gylhrvth@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",

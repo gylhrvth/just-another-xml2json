@@ -7,6 +7,143 @@ This is a simple to use tool to parse and create XML files. It was written in 10
 npm install just-another-xml2json
 ```
 
+## What's new?
+In some cases, we use a well defined XML file and don't like all these arrays with a single element.
+To generate a compact result, you may use the options, like:
+```ts
+const [result, ignoredTokens] = convertXML2JSON(xmlFileContent, { dropArrayIfKeysAreUnique: true })
+```
+
+
+<table>
+  <tr>
+    <td>Classic result</td>
+    <td>The new compact result</td>
+  </tr>
+  <tr>
+    <td>
+<pre style="font-size:0.75em">[
+  {
+    "#PROC_INSTR": "<?xml version=\"1.0\"?>"
+  },
+  {
+  "note": [
+    {
+      "to": [
+        {
+          "#TEXT": "Tove"
+        }
+      ]
+    },
+    {
+      "from": [
+        {
+          "#TEXT": "Jani"
+        }
+      ]
+    },
+    {
+      "heading": [
+        {
+          "@reminder": "yes"
+        },
+        {
+          "#TEXT": "Reminder"
+        }
+      ]
+    },
+    {
+      "body": [
+        {
+          "#TEXT": "Don't forget me this weekend!"
+        }
+      ]
+    },
+    {
+      "#COMMENT": "<!-- This is a comment -->"
+    },
+    {
+      "items": [
+        {
+          "item": [
+            {
+              "@id": "1"
+            }
+          ]
+        },
+        {
+          "item": [
+            {
+              "@id": "2"
+            }
+          ]
+        },
+        {
+          "item": [
+            {
+              "@id": "3"
+            }
+          ]
+        }
+        ]
+      },
+      {
+        "data": [
+          {
+            "#TEXT": "<![CDATA[Some unescaped <data> & characters]]>"
+          }
+        ]
+      }
+  ]
+}
+]</pre>
+    </td>
+    <td>
+<pre style="font-size:0.75em">{
+  "#PROC_INSTR": "<?xml version=\"1.0\"?>",
+  "note": {
+    "to": {
+      "#TEXT": "Tove"
+    },
+    "from": {
+      "#TEXT": "Jani"
+    },
+    "heading": {
+      "@reminder": "yes",
+      "#TEXT": "Reminder"
+    },
+    "body": {
+      "#TEXT": "Don't forget me this weekend!"
+    },
+    "#COMMENT": "<!-- This is a comment -->",
+    "items": [
+    {
+      "item": {
+        "@id": "1"
+      }
+    },
+    {
+      "item": {
+        "@id": "2"
+      }
+    },
+    {
+      "item": {
+        "@id": "3"
+      }
+    }
+    ],
+    "data": {
+      "#TEXT": "<![CDATA[Some unescaped <data> & characters]]>"
+    }
+  }
+}</pre>
+    </td>
+  </tr>
+</table>
+
+**Attention:** Depending from the input XML document, e.g if a child element is single or multiple, the structure of JSON result may vary. If you prefer a stable structure, stay on the classic result. 
+
 ## Usage XML -> JSON
 ```ts
 const xmlFileContent = '<?xml version="1.0"?>\
@@ -78,6 +215,24 @@ The variable result contains the XML representation of the input data:
   await writeXMLFile(testOutPath, result)
 ```
 
+## API
+K.I.S.S = keep it simple and...
+
+```ts
+type ConvertXML2JSONOptions = {
+    dropArrayIfKeysAreUnique?: boolean;
+};
+class WrongFormattedXmlError extends Error {
+    token?: Token;
+    constructor(message?: string, token?: Token);
+}
+
+function convertXML2JSON(xmlBuffer: string, options?: ConvertXML2JSONOptions): [result: (any | any[]), ignoredTokens: Token[]];
+function convertJSON2XML(obj: any | any[]): string;
+
+async function readXMLFile(path: string, options?: ConvertXML2JSONOptions): Promise<[result: (any | any[]), ignoredTokens: Token[]]>;
+async function writeXMLFile(path: string, obj: any): Promise<void>;
+```
 
 ## Licensing
 MIT License

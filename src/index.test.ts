@@ -1,4 +1,4 @@
-import { convertXML2JSON, convertJSON2XML, readXMLFile, writeXMLFile, WrongFormattedXmlError } from './index'
+import { convertXML2JSON, convertJSON2XML, readXMLFile, writeXMLFile, WrongFormattedXmlError } from './index.js'
 import path from 'path';
 import * as fs from 'fs'
 
@@ -16,30 +16,36 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a/>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([])
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML attributes', () => {
         const input = '<?xml version="1.0"?>\n<a myAttr="123"/>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([{ "@myAttr": "123" }])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([{ "@myAttr": "123" }])
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML no child notes', () => {
         const input = '<?xml version="1.0"?>\n<a></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([])
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -47,10 +53,12 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a><b/></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([{ b: [] }])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([{ b: [] }])
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -58,16 +66,18 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a><b/><b/><b/><b/><b/></a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([
             { b: [] },
             { b: [] },
             { b: [] },
             { b: [] },
             { b: [] },
         ])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
 
@@ -75,23 +85,27 @@ describe('convert XML to JSON', () => {
         const input = '<?xml version="1.0"?>\n<a>Dummy text</a>'
         const [result] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a).toEqual([
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a).toEqual([
             { '#TEXT': 'Dummy text' },
         ])
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
     })
 
     test('XML with comment', () => {
         const input = '<?xml version="1.0"?>\n<a><!-- This is a comment --></a>'
         const [result, ignoredTokens] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a.length).toBe(1);
-        expect(result[1].a[0]).toHaveProperty('#COMMENT')
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a.length).toBe(1);
+        expect(resultArray[1].a[0]).toHaveProperty('#COMMENT')
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
         expect(ignoredTokens.length).toEqual(0)
     })
 
@@ -104,12 +118,136 @@ describe('convert XML to JSON', () => {
   ]]></description></a>'
         const [result, ignoredTokens] = convertXML2JSON(input)
 
-        expect(result.length).toBe(2)
-        expect(result[1]).toHaveProperty('a')
-        expect(result[1].a.length).toBe(1)
-        expect(result[1].a[0]).toHaveProperty('description')
-        expect((result[1].a[0].description[0]['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
-        expect(result[0]).toHaveProperty('#PROC_INSTR')
+        expect(Array.isArray(result)).toBe(true)
+        const resultArray = result as any[]
+        expect(resultArray.length).toBe(2)
+        expect(resultArray[1]).toHaveProperty('a')
+        expect(resultArray[1].a.length).toBe(1)
+        expect(resultArray[1].a[0]).toHaveProperty('description')
+        expect((resultArray[1].a[0].description[0]['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
+        expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
+        expect(ignoredTokens.length).toEqual(0)
+    })
+
+
+    test('Convert with and without options', () => {
+        const input = '<?xml version="1.0"?>\n<a><b/></a>'
+        const [result] = convertXML2JSON(input)
+        const [resultWithOptions] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: false })
+
+        expect(JSON.stringify(result)).toEqual(JSON.stringify(resultWithOptions))
+    })
+
+})
+
+
+
+describe('convert XML to compact JSON (without arrays)', () => {
+    test('Minimum XML', () => {
+        const input = '<a/>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        expect(result).toStrictEqual({
+            a: {}
+        })
+    })
+
+    test('XML decoration', () => {
+        const input = '<?xml version="1.0"?>\n<a/>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual({})
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+    test('XML attributes', () => {
+        const input = '<?xml version="1.0"?>\n<a myAttr="123"/>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual({ "@myAttr": "123" })
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+    test('XML no child notes', () => {
+        const input = '<?xml version="1.0"?>\n<a></a>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual({})
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+
+    test('XML with a single child note', () => {
+        const input = '<?xml version="1.0"?>\n<a><b/></a>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual({ b: {} })
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+
+    test('XML with 5 child notes', () => {
+        const input = '<?xml version="1.0"?>\n<a><b/><b/><b/><b/><b/></a>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual([
+            { b: {} },
+            { b: {} },
+            { b: {} },
+            { b: {} },
+            { b: {} },
+        ])
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+
+    test('XML with TEXT notes', () => {
+        const input = '<?xml version="1.0"?>\n<a>Dummy text</a>'
+        const [result] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toEqual(
+            { '#TEXT': 'Dummy text' },
+        )
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+    })
+
+    test('XML with comment', () => {
+        const input = '<?xml version="1.0"?>\n<a><!-- This is a comment --></a>'
+        const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toHaveProperty('#COMMENT')
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
+        expect(ignoredTokens.length).toEqual(0)
+    })
+
+
+    test('XML with CDATA', () => {
+        const input = '<?xml version="1.0"?>\n<a><description><![CDATA[\
+    This description contains characters that would normally need escaping:\
+    <, >, &, and quotes (").\
+    CDATA is useful for embedding text or code that should not be parsed as XML.\
+  ]]></description></a>'
+        const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+
+        const resultObj = result as any
+        expect(resultObj).toHaveProperty('a')
+        expect(resultObj.a).toHaveProperty('description')
+        expect((resultObj.a.description['#TEXT'] as string).startsWith('<![CDATA[')).toEqual(true)
+        expect(resultObj).toHaveProperty('#PROC_INSTR')
         expect(ignoredTokens.length).toEqual(0)
     })
 
@@ -207,6 +345,22 @@ describe('convert JSON to XML', () => {
         }]
         const result: any = convertJSON2XML(input)
 
+        expect(result).toContain('<?xml version="1.0"?>')
+        expect(result).toContain('<a myAttr="123">')
+        expect(result).toContain('<b/>')
+        expect(result).toContain('</a>')
+    })
+
+
+    test('Convert XML from a compact JSON', () => {
+        const input = {
+            '#PROC_INSTR': '<?xml version="1.0"?>',
+            a: {
+                '@myAttr': '123',
+                b: {}
+            },
+        }
+        const result: any = convertJSON2XML(input)
         expect(result).toContain('<?xml version="1.0"?>')
         expect(result).toContain('<a myAttr="123">')
         expect(result).toContain('<b/>')
@@ -351,6 +505,80 @@ describe('Wrong formated XML documents', () => {
     test('Two roots', () => {
         const input = '<a></a><b>ABCD</b>'
         expect(() => convertXML2JSON(input)).toThrow(WrongFormattedXmlError);
+    })
+
+
+    test('Incorrect XML file - only closing tags', () => {
+        const input = '<?xml version="1.0"?>\n</a></description></description></a>'
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
+    })
+
+    test('Incorrect XML file - attribute without value', () => {
+        const input = '<?xml version="1.0"?>\n<a><description name=></description></a>'
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
+    })
+
+
+    test('Incorrect XML file - missing closing sign', () => {
+        const input = '<?xml version="1.0"?>\n<a><description name="example"</description></a>'
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(SyntaxError)
+        }
+    })
+
+    test('Incorrect XML file - missing opening sign', () => {
+        const input = '<?xml version="1.0"?>\n<a><description name="example">/description></a>'
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
+    })
+
+
+    test('Incorrect XML file - empty input', () => {
+        const input = ''
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
+    })
+
+
+    test('Incorrect XML file - only whitespaces', () => {
+        const input = '   \n   \t   '
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
+    })
+
+    test('Incorrect XML file - abcdefgh', () => {
+        const input = 'abcdefgh'
+
+        try {
+            const [result, ignoredTokens] = convertXML2JSON(input, { dropArrayIfKeysAreUnique: true })
+        } catch (e) {
+            expect(e).toBeInstanceOf(WrongFormattedXmlError)
+        }
     })
 
 
