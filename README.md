@@ -8,21 +8,15 @@ npm install just-another-xml2json
 ```
 
 ## What's new?
-In some cases, we use a well defined XML file and don't like all these arrays with a single element.
+In some cases, you may use a well defined XML file and don't like all these arrays with a single element.
 To generate a compact result, you may use the options, like:
 ```ts
 const [result, ignoredTokens] = convertXML2JSON(xmlFileContent, { dropArrayIfKeysAreUnique: true })
 ```
 
-
-<table>
-  <tr>
-    <td>Classic result</td>
-    <td>The new compact result</td>
-  </tr>
-  <tr>
-    <td>
-<pre style="font-size:0.75em">[
+classic result looks like:
+```
+[
   {
     "#PROC_INSTR": "<?xml version=\"1.0\"?>"
   },
@@ -96,10 +90,12 @@ const [result, ignoredTokens] = convertXML2JSON(xmlFileContent, { dropArrayIfKey
       }
   ]
 }
-]</pre>
-    </td>
-    <td>
-<pre style="font-size:0.75em">{
+]
+```
+
+the new compact result looks like:
+```
+{
   "#PROC_INSTR": "<?xml version=\"1.0\"?>",
   "note": {
     "to": {
@@ -137,10 +133,9 @@ const [result, ignoredTokens] = convertXML2JSON(xmlFileContent, { dropArrayIfKey
       "#TEXT": "<![CDATA[Some unescaped <data> & characters]]>"
     }
   }
-}</pre>
-    </td>
-  </tr>
-</table>
+}
+```
+
 
 **Attention:** Depending from the input XML document, e.g if a child element is single or multiple, the structure of JSON result may vary. If you prefer a stable structure, stay on the classic result. 
 
