@@ -105,6 +105,7 @@ describe('convert XML to JSON', () => {
         expect(resultArray[1]).toHaveProperty('a')
         expect(resultArray[1].a.length).toBe(1);
         expect(resultArray[1].a[0]).toHaveProperty('#COMMENT')
+        expect(resultArray[1].a[0]['#COMMENT']).toBe(' This is a comment ')
         expect(resultArray[0]).toHaveProperty('#PROC_INSTR')
         expect(ignoredTokens.length).toEqual(0)
     })
@@ -230,6 +231,7 @@ describe('convert XML to compact JSON (without arrays)', () => {
         const resultObj = result as any
         expect(resultObj).toHaveProperty('a')
         expect(resultObj.a).toHaveProperty('#COMMENT')
+        expect(resultObj.a['#COMMENT']).toBe(' This is a comment ')
         expect(resultObj).toHaveProperty('#PROC_INSTR')
         expect(ignoredTokens.length).toEqual(0)
     })
@@ -317,7 +319,7 @@ describe('convert JSON to XML', () => {
                 '#PROC_INSTR': '<?xml version="1.0"?>'
             },
             {
-                '#COMMENT': '<!-- This is a comment -->'
+                '#COMMENT': ' This is a comment '
             },
             {
                 a: [

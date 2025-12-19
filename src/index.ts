@@ -146,8 +146,10 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
         tagStack.push(newObject)
       }
     } else if (token.type === TOKEN_TYPE_COMMENT) {
+      let commentValue = token.value.trim()
+      commentValue = commentValue.substring(4, commentValue.length - 3) // remove <!-- and -->
       let newObject = {}
-      Object.assign(newObject, { ['#COMMENT']: token.value })
+      Object.assign(newObject, { ['#COMMENT']: commentValue })
       tagStack.push(newObject)
     } else if (token.type === TOKEN_TYPE_PROC_INSTR) {
       let newObject = {}
@@ -215,7 +217,7 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
     parts.push(`${value}\n`)
     return parts
   } else if (tagName === '#COMMENT') {
-    parts.push(`${value}\n`)
+    parts.push(`<!--${value}-->\n`)
     return parts
   } else if (Array.isArray(value)) {
     value.forEach((element: any) => {
