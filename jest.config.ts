@@ -13,14 +13,8 @@ const config: Config.InitialOptions = {
   // Verbose for clearer output in CI / local runs
   verbose: true,
 
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-      useESM: true
-    }
-  },
   transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }]
+    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json', useESM: true }]
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],

@@ -295,13 +295,3 @@ function isEveryKeyUnique(objArray: object[]): boolean {
 }
 
 
-
-const xmlFileContent = `<note>
-  <to>Tove</to>
-  <from>Jani</from>
-  <heading>Reminder</heading>
-  <body>Don't forget me this weekend!</body>
-</note>`;
-
-const [obj] = convertXML2JSON(xmlFileContent, { dropArrayIfKeysAreUnique: true })
-console.log(JSON.stringify(obj, null, 6))
