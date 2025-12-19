@@ -8,136 +8,25 @@ npm install just-another-xml2json
 ```
 
 ## What's new?
+
+### Handling Comments
+The comment tag was not cleared from XML comment prefix and suffix. It has been corrected
+
+### webpack users
+Some webpack users has reported a problem with importing the library.
+For them there are a new export:
+
+```ts
+const { convertXML2JSON } = require('just-another-xml2json/cjs')
+```
+
+### dropArrayIfKeysAreUnique Option
+
 In some cases, you may use a well defined XML file and don't like all these arrays with a single element.
 To generate a compact result, you may use the options, like:
 ```ts
 const [result, ignoredTokens] = convertXML2JSON(xmlFileContent, { dropArrayIfKeysAreUnique: true })
 ```
-
-classic result looks like:
-```
-[
-  {
-    "#PROC_INSTR": "<?xml version=\"1.0\"?>"
-  },
-  {
-  "note": [
-    {
-      "to": [
-        {
-          "#TEXT": "Tove"
-        }
-      ]
-    },
-    {
-      "from": [
-        {
-          "#TEXT": "Jani"
-        }
-      ]
-    },
-    {
-      "heading": [
-        {
-          "@reminder": "yes"
-        },
-        {
-          "#TEXT": "Reminder"
-        }
-      ]
-    },
-    {
-      "body": [
-        {
-          "#TEXT": "Don't forget me this weekend!"
-        }
-      ]
-    },
-    {
-      "#COMMENT": "<!-- This is a comment -->"
-    },
-    {
-      "items": [
-        {
-          "item": [
-            {
-              "@id": "1"
-            }
-          ]
-        },
-        {
-          "item": [
-            {
-              "@id": "2"
-            }
-          ]
-        },
-        {
-          "item": [
-            {
-              "@id": "3"
-            }
-          ]
-        }
-        ]
-      },
-      {
-        "data": [
-          {
-            "#TEXT": "<![CDATA[Some unescaped <data> & characters]]>"
-          }
-        ]
-      }
-  ]
-}
-]
-```
-
-the new compact result looks like:
-```
-{
-  "#PROC_INSTR": "<?xml version=\"1.0\"?>",
-  "note": {
-    "to": {
-      "#TEXT": "Tove"
-    },
-    "from": {
-      "#TEXT": "Jani"
-    },
-    "heading": {
-      "@reminder": "yes",
-      "#TEXT": "Reminder"
-    },
-    "body": {
-      "#TEXT": "Don't forget me this weekend!"
-    },
-    "#COMMENT": "<!-- This is a comment -->",
-    "items": [
-    {
-      "item": {
-        "@id": "1"
-      }
-    },
-    {
-      "item": {
-        "@id": "2"
-      }
-    },
-    {
-      "item": {
-        "@id": "3"
-      }
-    }
-    ],
-    "data": {
-      "#TEXT": "<![CDATA[Some unescaped <data> & characters]]>"
-    }
-  }
-}
-```
-
-
-**Attention:** Depending from the input XML document, e.g if a child element is single or multiple, the structure of JSON result may vary. If you prefer a stable structure, stay on the classic result. 
 
 ## Usage XML -> JSON
 ```ts
