@@ -13,13 +13,13 @@ export default {
     ],
     output: [
         {
-            file: 'dist/index.cjs',
+            file: 'dist/cjs/index.cjs',
             format: 'cjs',
             exports: 'named',
             sourcemap: true
         },
         {
-            file: 'dist/index.esm.js',
+            file: 'dist/esm/index.js',
             format: 'esm',
             sourcemap: true
         }
