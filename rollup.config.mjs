@@ -9,19 +9,29 @@ export default {
     plugins: [
         resolve(),
         commonjs(),
-        typescript({ tsconfig: './tsconfig.json' })
+        typescript({
+            tsconfig: './tsconfig.json',
+            declaration: false,
+            declarationMap: false
+        })
     ],
     output: [
         {
-            file: 'dist/cjs/index.cjs',
-            format: 'cjs',
-            exports: 'named',
-            sourcemap: true
+            dir: 'dist/esm',
+            format: 'esm',
+            sourcemap: true,
+            preserveModules: false,
+            preserveModulesRoot: 'src',
+            entryFileNames: '[name].js'
         },
         {
-            file: 'dist/esm/index.js',
-            format: 'esm',
-            sourcemap: true
+            dir: 'dist/cjs',
+            format: 'cjs',
+            sourcemap: true,
+            preserveModules: false,
+            preserveModulesRoot: 'src',
+            entryFileNames: '[name].cjs',
+            exports: 'named'
         }
     ]
 };

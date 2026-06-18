@@ -12,13 +12,6 @@ npm install just-another-xml2json
 ### Handling Comments
 The comment tag was not cleared from XML comment prefix and suffix. It has been corrected
 
-### webpack users
-Some webpack users has reported a problem with importing the library.
-For them there are a new export:
-
-```ts
-const { convertXML2JSON } = require('just-another-xml2json/cjs')
-```
 
 ### dropArrayIfKeysAreUnique Option
 

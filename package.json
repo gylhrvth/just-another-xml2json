@@ -5,10 +5,10 @@
   "type": "module",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.cjs",
       "default": "./dist/esm/index.js"
@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "rimraf dist coverage",
     "dev": "node --loader ts-node/esm src/index.ts",
-    "build": "rollup -c",
+    "build": "rollup -c && tsc -p tsconfig.types.json",
     "test": "jest --coverage",
     "test:watch": "jest --watchAll",
     "prepack": "npm run build"
