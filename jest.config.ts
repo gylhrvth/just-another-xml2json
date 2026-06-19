@@ -6,6 +6,12 @@ const config: Config.InitialOptions = {
   // Look for tests in __tests__ or files ending with .test.ts or .spec.ts
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   // Optionally enable collecting coverage by default (can be overridden on CLI)
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    '/build/',
+    '/coverage/'
+  ],
   collectCoverage: false,
   coverageDirectory: 'coverage',
   // If you want to collect coverage only for src files:
@@ -18,7 +24,7 @@ const config: Config.InitialOptions = {
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
-  moduleNameMapper: { '^(.*)\.js$': '$1' }
+  moduleNameMapper: { '^(.*)\.js$': '$1' },
 };
 
 export default config;

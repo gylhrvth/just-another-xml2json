@@ -1,26 +1,22 @@
 {
   "name": "just-another-xml2json",
-  "version": "0.3.3",
+  "version": "0.3.7",
   "description": "Just an another XML to JSON (and back) converter",
   "type": "module",
-  "main": "./dist/cjs/index.cjs",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.cjs",
-      "default": "./dist/esm/index.js"
-    },
-    "./package.json": "./package.json"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "scripts": {
-    "clean": "rimraf dist coverage",
+    "clean": "rm -rf dist coverage",
     "dev": "node --loader ts-node/esm src/index.ts",
-    "build": "rollup -c && tsc -p tsconfig.types.json",
-    "test": "jest --coverage",
-    "test:watch": "jest --watchAll",
+    "build": "npm run clean && tsc",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll",
     "prepack": "npm run build"
   },
   "keywords": [
@@ -41,8 +37,6 @@
     "@types/node": "^24.10.1",
     "dependency-cruiser": "^17.3.2",
     "jest": "^30.2.0",
-    "rimraf": "^6.1.2",
-    "rollup": "^4.53.3",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

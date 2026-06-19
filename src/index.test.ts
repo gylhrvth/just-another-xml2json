@@ -1,6 +1,8 @@
 import { convertXML2JSON, convertJSON2XML, readXMLFile, writeXMLFile, WrongFormattedXmlError } from './index.js'
-import path from 'path';
 import * as fs from 'fs'
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 
 describe('convert XML to JSON', () => {
     test('Minimum XML', () => {
@@ -374,6 +376,7 @@ describe('convert JSON to XML', () => {
 describe('convert XML to JSON and back', () => {
     test('test with XML comments', async () => {
 
+        const __dirname = path.dirname(new URL(import.meta.url).pathname)
         const testFileName = 'test3.xml'
         const testData = path.join(__dirname, '..', 'test_input', testFileName)
         const outDir = path.join(__dirname, '..', 'test_output')
@@ -405,6 +408,7 @@ describe('convert XML to JSON and back', () => {
 
     test('stress test with an XSD', async () => {
 
+        const __dirname = path.dirname(fileURLToPath(import.meta.url));
         const testFileName = 'test2.xsd'
         const testData = path.join(__dirname, '..', 'test_input', testFileName)
         const outDir = path.join(__dirname, '..', 'test_output')
@@ -435,6 +439,7 @@ describe('convert XML to JSON and back', () => {
 
     test('stress test with a large file', async () => {
 
+        const __dirname = path.dirname(fileURLToPath(import.meta.url));
         const testFileName = 'large.xml'
         const testData = path.join(__dirname, '..', 'test_input', testFileName)
         const outDir = path.join(__dirname, '..', 'test_output')
