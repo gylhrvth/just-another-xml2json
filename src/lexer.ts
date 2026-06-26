@@ -125,7 +125,7 @@ export class Lexer {
             const lines = text.split(/\r\n?|\n/);
             if (lines.length > 1) {
                 this.line += lines.length - 1;
-                this.col = lines[lines.length - 1].length + 1;
+                this.col = (lines[lines.length - 1] as string).length + 1;
             } else {
                 this.col += text.length;
             }

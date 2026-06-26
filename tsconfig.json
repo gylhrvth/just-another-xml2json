@@ -3,18 +3,20 @@
     "target": "esnext",
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "rootDir": "src",
-    "outDir": "dist",
-    "declaration": true,
-    "sourceMap": true,
+    "ignoreDeprecations": "6.0",
     "strict": true,
-    "isolatedDeclarations": true,
-    "esModuleInterop": true
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src"
-  ],
-  "types": [
-    "node"
   ]
 }

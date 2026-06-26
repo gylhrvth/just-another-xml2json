@@ -22,7 +22,7 @@ export type ConvertXML2JSONOptions = {
 }
 
 export class WrongFormattedXmlError extends Error {
-  token?: Token
+  token?: Token | undefined
 
   constructor(message?: string, token?: Token) {
     super(message)
@@ -59,7 +59,7 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
     ) {
       tagNameStack.push(token)
     } else if (token.type === TOKEN_TYPE_TAG_NAME) {
-      if (tagNameStack.length == 0 || tagNameStack[tagNameStack.length - 1].type !== 'TAG_NAME') {
+      if (tagNameStack.length == 0 || (tagNameStack[tagNameStack.length - 1] as Token).type !== 'TAG_NAME') {
         // Add tag
         tagNameStack.push(token)
       } else {
@@ -67,7 +67,7 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
         attrNameStack.push(token)
       }
     } else if (token.type === TOKEN_TYPE_SLASH_GT) {
-      const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0]
+      const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0] as Token | undefined
       if (!tagName ||
         !Object.keys(tagName).includes('value')
       ) {
@@ -76,14 +76,18 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
       let childElements = [...attributes]
 
       tagStack.push({ [tagName.value]: [] })
-      const [[key, value]] = Object.entries(tagStack[tagStack.length - 1])
-      mergeAsObjectOrArray(tagStack[tagStack.length - 1], key, value, childElements, options)
-
+      const container = tagStack[tagStack.length - 1] as (object | object[])
+      const entries = Object.entries(container)
+      const firstEntry = entries[0]
+      if (firstEntry !== undefined) {
+        const [key, value] = firstEntry
+        mergeAsObjectOrArray(container, key, value, childElements, options)
+      }
       tagNameStack = []
       attributes = []
     } else if (token.type === TOKEN_TYPE_GT) {
-      const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0]
-      const closingTag = (tagNameStack.length >= 2 && tagNameStack[1].type === 'SLASH')
+      const tagName = tagNameStack.filter(t => t.type === 'TAG_NAME')[0] as Token | undefined
+      const closingTag = (tagNameStack.length >= 2 && (tagNameStack[1] as Token).type === 'SLASH')
       if (!tagName ||
         !Object.keys(tagName).includes('value')
       ) {
@@ -98,24 +102,28 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
         let childElements: any[] = []
         let index = tagStack.length - 1
 
-        while (index > 0 && !Object.keys(tagStack[index]).includes(tagName.value)) {
+        while (index > 0 && !Object.keys(tagStack[index] as { [key: string]: any[] }).includes(tagName.value)) {
           childElements = [tagStack[index], ...childElements]
           --index
           tagStack.pop()
         }
         if (index >= 0) {
-          const [[key, value]] = Object.entries(tagStack[index])
-          if (key !== undefined) {
-            // validate matching opening-closing tag.
-            if (key !== tagName.value) {
-              throw new WrongFormattedXmlError(`Tag name of closing tag "${tagName.value}" at ${token.line}:${token.col} doesn't match to any opening tag.`)
+          const entries = Object.entries(tagStack[index] as { [key: string]: any[] })
+          const firstEntry = entries[0]
+          if (firstEntry !== undefined) {
+            const [key, value] = firstEntry
+            if (key !== undefined) {
+              // validate matching opening-closing tag.
+              if (key !== tagName.value) {
+                throw new WrongFormattedXmlError(`Tag name of closing tag "${tagName.value}" at ${token.line}:${token.col} doesn't match to any opening tag.`)
+              }
+              for (let i = value.length - 1; i >= 0; --i) {
+                const attrObj = value[i]
+                childElements = [attrObj, ...childElements]
+              }
+              Object.assign(tagStack[index] as { [key: string]: any[] }, { [key]: {} })
+              mergeAsObjectOrArray(tagStack[index] as { [key: string]: any[] }, key, value, childElements, options)
             }
-            for (let i = value.length - 1; i >= 0; --i) {
-              const attrObj = value[i]
-              childElements = [attrObj, ...childElements]
-            }
-            Object.assign(tagStack[index], { [key]: {} })
-            mergeAsObjectOrArray(tagStack[index], key, value, childElements, options)
           }
         } else {
           console.error('Stack error')
@@ -128,7 +136,7 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
     } else if (token.type === TOKEN_TYPE_ATTR_VALUE_DQ ||
       token.type === TOKEN_TYPE_ATTR_VALUE_SQ
     ) {
-      const attrName = attrNameStack[0].value
+      const attrName = (attrNameStack[0] as Token).value
       // drop string quotes
       const attrValue = token.value.slice(1, token.value.length - 1)
       attributes = [
@@ -180,7 +188,9 @@ export function convertXML2JSON(xmlBuffer: string, options: ConvertXML2JSONOptio
     let resultObject: object = {} as object
     tagStack.forEach((t: any) => {
       const key = Object.keys(t)[0]
-      Object.assign(resultObject, { [key]: t[key] })
+      if (key !== undefined) {
+        Object.assign(resultObject, { [key]: t[key] })
+      }
     })
     return [resultObject, ignoredTokens]
   }
@@ -225,7 +235,9 @@ function createTag(tagName: string, value: any, indent: number = 0): string[] {
       const keys = Object.keys(element)
       if (keys.length == 1) {
         const key = keys[0]
-        processChildElements(key, element, indent, attributes, children, texts)
+        if (key !== undefined) {
+          processChildElements(key, element, indent, attributes, children, texts)
+        }
       } else {
         console.error('Invalid Keys', element)
       }
@@ -276,7 +288,9 @@ function mergeAsObjectOrArray(tagStackTopObject: object | object[], key: string,
       let compactChildElements = {}
       childElements.forEach((ce: any) => {
         const ceKey = Object.keys(ce)[0]
-        Object.assign(compactChildElements, { [ceKey]: ce[ceKey] })
+        if (ceKey !== undefined) {
+          Object.assign(compactChildElements, { [ceKey]: ce[ceKey] })
+        }
       })
       Object.assign(tagStackTopObject, { [key]: { ...compactChildElements } })
     } else {
@@ -289,7 +303,9 @@ function mergeAsObjectOrArray(tagStackTopObject: object | object[], key: string,
 function isEveryKeyUnique(objArray: object[]): boolean {
   const countDuplicates: Map<string, number> = objArray.reduce((result: Map<string, number>, ce) => {
     const key = Object.keys(ce)[0]
-    result.set(key, (result.get(key) || 0) + 1)
+    if (key !== undefined) {
+      result.set(key, (result.get(key) || 0) + 1)
+    }
     return result
   }, new Map<string, number>())
 
